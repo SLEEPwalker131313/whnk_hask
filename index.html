@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title>eScooter shing system representation</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .text-field {
+            height: 45px;
+            font-size: 2rem;
+            width: 70%;
+            margin: 20px;
+            border-radius: 5px;
+        }
+
+        .btn {
+            align-content: center;
+            font-size: 1.5rem;
+            height: 45px;
+            margin: 20px;
+            border-radius: 10px;
+        }
+    </style>
+    <!--<script type="text/javascript" src="./js/methods.js"></script>-->
+</head>
+
+<body onload="getScooterCoords()">
+
+    <style type='text/css'>
+        #info {
+            display: block;
+            position: absolute;
+            margin: 5px auto;
+            width: 25%;
+            padding: 10px;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            text-align: left;
+            color: #222;
+            background: #fff;
+        }
+    </style>
+    <div>
+        <div id='map' onclick=""></div>
+        <!--<pre id='info'></pre>-->
+        <!--<div style="float:left">
+            <input type="text" class="text-field" placeholder="text-field-1" id="text-field-1">
+            <br>
+            <input type="text" class="text-field" placeholder="text-field-2" id="text-field-2">
+            <br>
+            <input type="text" class="text-field" placeholder="text-field-3" id="text-field-3">
+            <br>
+            <button class="btn">Generate</button>
+        </div>-->
+    </div>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoibWFrYXJvdm1pa2hhaWwiLCJhIjoiY2p4MjV6YmJhMDZnZTN5cXR6bzl4Z2xsZyJ9.7jv9q7XzGcR6MeJjS_APHA';
+        var map = new mapboxgl.Map({
+            container: 'map', // container id
+            style: 'mapbox://styles/mapbox/dark-v10',
+            center: [30.31, 59.94], // starting position
+            zoom: 11.5 // starting zoom
+        });
+
+        map.on('mousemove', function (e) {
+            //document.getElementById('info').innerHTML =
+            // e.point is the x, y coordinates of the mousemove event relative
+            // to the top-left corner of the map
+            //JSON.stringify(e.point) + '<br />' +
+            // e.lngLat is the longitude, latitude geographical position of the event
+            //    JSON.stringify(e.lngLat);
+
+            //console.log(e.lngLat);
+        });
+
+        var server = "";
+        var port = "9089";
+        var method = "get_coords";
+
+        var count = 0;
+
+        var subscribe = function (url, cb) {
+            $.ajax({
+                method: 'GET',
+                url: url,
+                success: function (data) {
+                    cb(data);
+                },
+                complete: function () {
+                    setTimeout(function () {
+                        subscribe(url, cb);
+                    }, 5000);
+                },
+                timeout: 5000
+            });
+        };
+
+        function getScooterCoords() {
+            subscribe("/positions", function (data) {
+                var coordsArray = data;
+                for (c in coordsArray) {
+                    var lng = coordsArray[c]['lng'];
+                    var lat = coordsArray[c]['lat'];
+                    var id = coordsArray[c]['id'];
+                    var type = coordsArray[c]['type'];
+                    drawScooterIcon(lng, lat, id.toString(), type, "Charging station");
+                }
+            })
+        }
+
+        function drawScooterIcon(lng, lat, address, type, info) {
+            var image_uri = '/img/vespa.png';
+            if (type === 0) {
+                image_uri = '/img/man.png';
+            } else if (type === 1) {
+                image_uri = '/img/battery.png';
+            }
+            try {
+                if (map.getLayer(address)) {
+                    map.removeLayer(address);
+                } else {
+                }
+                if (map.getSource(address)) {
+                    map.removeSource(address);
+                } else {
+                }
+            } catch (e) {
+
+            }
+            try {
+                map.loadImage(image_uri, function (error, image) {
+                    //if (error) throw error;
+                    map.addImage(address, image);
+                    map.addLayer({
+                        "id": address,
+                        "type": "symbol",
+                        "source": {
+                            "type": "geojson",
+                            "data": {
+                                "type": "FeatureCollection",
+                                "features": [{
+                                    "properties": {
+                                        "description": "<strong>" + info + "</strong>",
+                                        "icon": "theatre"
+                                    },
+                                    "type": "Feature",
+                                    "geometry": {
+                                        "type": "Point",
+                                        "coordinates": [lng, lat]
+                                    }
+                                }]
+                            }
+                        },
+                        "layout": {
+                            "icon-image": address,
+                            "icon-size": 0.05
+                        }
+                    });
+                });
+                if (type === 1) {
+                    map.on('mousemove', address, function (e) {
+                        var coordinates = e.features[0].geometry.coordinates;
+                        var description = e.features[0].properties.description;
+                        new mapboxgl.Popup()
+                            .setLngLat(coordinates)
+                            .setHTML('<h3>' + description + '</h3>')
+                            .addTo(map);
+                    });
+                }
+            } catch (e) {
+                //console.log(e);
+            }
+        }
+
+        function randomLng() {
+            var max = 30.31 + 0.25;
+            var min = 30.31 - 0.25;
+            return Math.random() * (max - min) + min;
+        }
+
+        function randomLat() {
+            var max = 59.94 + 0.25;
+            var min = 59.94 - 0.25;
+            return Math.random() * (max - min) + min;
+        }
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+</body>
+
+</html>
