@@ -31,7 +31,8 @@ class ScooterAgent(OEFAgent):
         self._api = LedgerApi('127.0.0.1', 8100)
         self._entity = Entity()
 
-        self.speed = 1
+        self.speed = 0.0005
+
 
         self._api.sync(self._api.tokens.wealth(self._entity, 5000000))
         self._address = Address(self._entity)
@@ -62,7 +63,7 @@ class ScooterAgent(OEFAgent):
                               Address(self.provider), self._address)
 
         self._contract.action(self._api, 'addScooter', 2456, [self.provider], Address(self.scooter),
-                              Address(self.provider), 22, 23, 100, 1, 15)
+                              Address(self.provider), int(start[1]*1000), int(start[0]*1000), 100, 1, 15)
 
 
     def on_search_result(self, search_id: int, agents: List[str]):
@@ -143,6 +144,8 @@ class ScooterAgent(OEFAgent):
                 if current_pos + d >= walked_distance:
                     alpha = (walked_distance - current_pos) / d
                     new_position = in_between(self.path[i], self.path[i+1], alpha)
+                    print(self._address, 'Path', self.path)
+                    print(self._address, 'Next point', self.path[i+1])
                     break
                 else:
                     current_pos += d
@@ -151,7 +154,7 @@ class ScooterAgent(OEFAgent):
                 raise Exception("That's all, folks!")
 
             self._contract.action(self._api, 'scooterUpdate', 2456, [self.provider],
-                                       Address(self.scooter), int(new_position[1]*1000), int(new_position[1]*1000))
+                                       Address(self.scooter), int(new_position[1]*1000), int(new_position[0]*1000), int(self.charge*100))
 
         #tx_digest = self._contract.action(self._api, 'book', 2456766, [self._entity], best_proposal['address'], Address(self.scooters[0]), best_slot[0], best_slot[1])
         #time.sleep(3)

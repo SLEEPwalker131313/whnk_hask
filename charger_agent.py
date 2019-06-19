@@ -63,7 +63,7 @@ class ChargerAgent(OEFAgent):
         self.chargers = [Entity(), ]
 
         self._api.contracts.action(self.digest, self.owner, 'addCharger', 2456766, [self._entity],
-                              Address(self.chargers[0]), self.longitude, self.latitude, self.price, self.rate, self.max_count)
+                              Address(self.chargers[0]), self.latitude, self.longitude, self.price, self.rate, self.max_count)
 
         #query = self._contract.query(api=self._api, name='getSlotInfo', charger=Address(self.chargers[0]))
         #print(query)
@@ -78,7 +78,12 @@ class ChargerAgent(OEFAgent):
         timeArr = []
         for key in self.scheduler.keys():
             timeArr.append(self.scheduler[key])
-        
+
+        print({"price_per_energy_percent": price, "digest": self.digest,
+                                "longitude": self.longitude, "latitude": self.latitude,
+                                "scheduler": json.dumps(timeArr), "rate": self.rate, "max_count": self.max_count,
+                                "charger_address": str(Address(self.chargers[0]))})
+
         # prepare the proposal with a given price.
         proposal = Description({"price_per_energy_percent": price, "digest": self.digest,
                                 "longitude": self.longitude, "latitude": self.latitude, 

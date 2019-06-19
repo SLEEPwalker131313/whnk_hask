@@ -59,7 +59,7 @@ class ChargerAgent(OEFAgent):
         self.chargers = [Entity(), ]
 
         self._contract.action(self._api, 'addCharger', 2456766, [self._entity],
-                              Address(self.chargers[0]), int(self.longitude*1000), int(self.latitude*1000), self.price, self.rate, self.max_count)
+                              Address(self.chargers[0]), int(self.latitude*1000), int(self.longitude*1000), self.price, self.rate, self.max_count)
         
         #query = self._contract.query(api=self._api, name='getSlotInfo', charger=Address(self.chargers[0]))
         #print(query)

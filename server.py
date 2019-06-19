@@ -101,11 +101,7 @@ cache.set('chargers', ['test'])
 app = Flask(__name__)
 
 #@app.route('/get_scooter_position/<address>', methods=["GET",])
-def get_scooter_positions():
-     api = LedgerApi('127.0.0.1', 8100)
-     entity = Entity()
-
-     api.sync(api.tokens.wealth(entity, 5000000))
+def get_scooter_positions(api):
      
      #address = Address(entity)
 
@@ -144,11 +140,7 @@ def get_scooter_positions():
      #return jsonify(dict)
 
 #@app.route('/get_charger_position/<address>', methods=["GET",])
-def get_charger_positions():
-     api = LedgerApi('127.0.0.1', 8100)
-     entity = Entity()
-
-     api.sync(api.tokens.wealth(entity, 5000000))
+def get_charger_positions(api):
 
      ret = []
 
@@ -229,7 +221,12 @@ def add_address(type):
 
 @app.route('/positions')
 def add_scooter():
-    return jsonify([*get_charger_positions(), *get_scooter_positions()])
+    api = LedgerApi('127.0.0.1', 8100)
+    entity = Entity()
+
+    api.sync(api.tokens.wealth(entity, 5000000))
+
+    return jsonify([*get_charger_positions(api), *get_scooter_positions(api)])
 
 @app.route('/img/<name>')
 def get_image(name):
